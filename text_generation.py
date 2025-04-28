@@ -1,9 +1,10 @@
 import os
 import json
 from openai import OpenAI
+import config
 
 # OpenAI API 키 설정
-os.environ["OPENAI_API_KEY"] = ""  # 보안 중요!
+os.environ["OPENAI_API_KEY"] = config.GPT_KEY  # 보안 중요!
 
 # 각 지표별 평가 기준 (10단계 구간)
 CRITERIA = {
@@ -86,15 +87,6 @@ def interpret_value_to_score(value, thresholds):
     else:
         return 10
 
-# 평가 결과에 따른 설명
-INTERPRETATION_MESSAGES = {
-    "매우 적음": "기준보다 많이 부족합니다. 동작이 너무 제한적일 수 있어요.",
-    "적음": "기준보다 약간 부족합니다. 개선이 필요해요.",
-    "적당함": "이상적인 범위입니다. 잘 유지되고 있어요.",
-    "많음": "기준보다 약간 많습니다. 조금만 줄이면 더 좋을 수 있어요.",
-    "매우 많음": "기준보다 많이 많습니다. 불안정하거나 과도할 수 있어요."
-}
-
 # 메인 평가 함수
 def evaluate_bowling_form(avg_shoulder_angle_diff, avg_movement, wrist_movement_total, ankle_switch_count):
     client = OpenAI()
@@ -123,10 +115,11 @@ def evaluate_bowling_form(avg_shoulder_angle_diff, avg_movement, wrist_movement_
 - 손목 이동 거리 총합: {wrist_movement_total} → 1~10 구간 중 {interpretations["wrist_movement_total"]}단계
 - 발목 높이 변화 이벤트 수: {ankle_switch_count} → 1~10 구간 중 {interpretations["ankle_switch_count"]}단계
 
-※ 괄호 안 숫자는 1(가장 부족) ~ 10(가장 과한) 단계 중 몇 번째인지 나타냅니다.
+※ 괄호 안 숫자는 1(가장 부족) ~ 10(가장 과한) 단계 중 몇 번째인지 나타냅니다 5나 6에 가까울 수록 높은 점수 입니다 5나 6이 아니라면 나쁜 점수 입니다 4나 7도 나쁜 점수 입니다 점수를 산정할 떄 크게 반영 하세요.
 
 이 결과를 바탕으로 저의 볼링 자세에 대한 평가와 피드백을 주시고, 잘 된 점과 개선이 필요한 점을 알려주세요.
 그리고 개선이 필요한 점이 크게 없다면, 개선이 필요한 점을 말할 때 잘하고 있지만 어떻게 더 했으면 좋겠다는 느낌으로 말해주세요.
+반대로 개선이 필요한 점이 많으면 잘 된 점이 없다고 솔직하게 말해주세요. 
 또한, 다음 투구는 어떻게 하면 좋을지 추천해 주세요 이 또한 개선할 점이 많이 없다면 유지하라고 짧게 말하고 다음 자세를 추천해 주세요. 마지막으로 총 평가 점수를 0부터 100 사이 숫자로 제시해 주세요.
 """
 
