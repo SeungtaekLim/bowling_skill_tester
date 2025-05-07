@@ -42,35 +42,27 @@ out = cv2.VideoWriter(result_video_path, cv2.VideoWriter_fourcc(*'XVID'), 30, (f
 # 키포인트 데이터를 저장할 배열
 all_keypoints_data = []
 
-for result in results:
+for i, result in enumerate(results):
+    print(f"[INFO] 프레임 {i} 처리 중...")
     if len(result) == 0 or result[0].keypoints is None or result[0].keypoints.xy is None:
         all_keypoints_data.append([])
-        annotated_frame = result.plot()
-        out.write(annotated_frame)
+        out.write(result.plot())
         continue
 
-    # 키포인트 추출
-    keypoints = result[0].keypoints
-    xy = keypoints.xy
-
-    frame_keypoints = []
-
-    for i in range(len(xy[0])):
-        x, y = xy[0][i]
-        frame_keypoints.append((x, y))
-
+    xy = result[0].keypoints.xy
+    frame_keypoints = [(x, y) for x, y in xy[0]]
     all_keypoints_data.append(frame_keypoints)
-
-    annotated_frame = result.plot()
-    out.write(annotated_frame)
+    out.write(result.plot())
 
 out.release()
 cap.release()
 
 # 유효한 키포인트가 하나라도 있는지 확인
 has_valid_data = any(len(frame) > 0 for frame in all_keypoints_data)
+user_level = "BEGINNER"
 
 if not has_valid_data:
+    print("[WARN] 유효한 키포인트 없음")
     final_score = 0
     grade = "BAD"
     guide_good_point = "분석 가능한 자세가 감지되지 않았습니다."
@@ -83,6 +75,7 @@ if not has_valid_data:
     print(f"부족한 점: {guide_bad_point}")
     print(f"추천: {guide_recommend}")
 else:
-    final_score, grade, guide_good_point, guide_bad_point, guide_recommend = analyze.analyze(
-        all_keypoints_data, frame_width, frame_height
+    print("[INFO] 키포인트 분석 중...")
+    final_score, grade, guide_good_point, guide_bad_point, guide_recommend, interpretations  = analyze.analyze(
+        all_keypoints_data, frame_width, frame_height, user_level
     )
